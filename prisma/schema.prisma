@@ -3,14 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-/**
- * Auth (NextAuth) models
- * Docs: https://authjs.dev/ (NextAuth / Auth.js)
- */
+// Auth (NextAuth) models
+// Docs: https://authjs.dev/ (NextAuth / Auth.js)
 model User {
   id            String   @id @default(cuid())
   name          String?
@@ -65,9 +63,7 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-/**
- * Commerce models
- */
+// Commerce models
 model Address {
   id          String  @id @default(cuid())
   userId      String
