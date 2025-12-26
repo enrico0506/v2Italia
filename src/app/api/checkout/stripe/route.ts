@@ -97,8 +97,8 @@ for (const it of items) {
   const vatCents = Math.round((subtotalGrossCents * vatRateBps) / (10000 + vatRateBps)); // same as calcVatFromGross
   const totalCents = subtotalGrossCents + shippingOption.costCents;
 
-const session = await getServerSession(authOptions);
-const userEmail = session?.user?.email ?? null;
+const authSession = await getServerSession(authOptions);
+const userEmail = authSession?.user?.email ?? null;
 const user = userEmail ? await prisma.user.findUnique({ where: { email: userEmail } }) : null;
 
   // Create Order (PENDING)
@@ -139,7 +139,7 @@ const user = userEmail ? await prisma.user.findUnique({ where: { email: userEmai
   const successUrl = `${baseUrl}/checkout/success?orderId=${order.id}`;
   const cancelUrl = `${baseUrl}/checkout/cancel?orderId=${order.id}`;
 
-  const session = await stripe.checkout.sessions.create({
+  const checkoutSession = await stripe.checkout.sessions.create({
     mode: "payment",
     payment_method_types: ["card"],
     customer_email: customer.email,
@@ -168,7 +168,7 @@ const user = userEmail ? await prisma.user.findUnique({ where: { email: userEmai
 
   await prisma.order.update({
     where: { id: order.id },
-    data: { paymentRef: session.id },
+    data: { paymentRef: checkoutSession.id },
   });
 
   // Email: ordine ricevuto (in dev log; in prod via SMTP)
@@ -185,5 +185,5 @@ const user = userEmail ? await prisma.user.findUnique({ where: { email: userEmai
     }),
   });
 
-  return NextResponse.json({ ok: true, url: session.url });
+  return NextResponse.json({ ok: true, url: checkoutSession.url });
 }

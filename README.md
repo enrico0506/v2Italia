@@ -284,6 +284,103 @@ Dati aziendali nel footer via `.env`:
 
 ---
 
+## 12.1) Deploy su Render (step‑by‑step)
+
+Questa base gira bene su Render come **Web Service (Node)** + **Render Postgres**.
+
+Render supporta un **Pre‑Deploy Command** utile per migrazioni Prisma (consigliato).  
+Riferimenti: Render Pre‑Deploy Command e guide Prisma/Render. 
+
+### Step 0 — Metti il codice su GitHub
+1) Crea un repository su GitHub
+2) Carica questa repo (commit + push su `main`)
+
+### Step 1 — Passa a PostgreSQL (obbligatorio per produzione)
+Per Render è consigliato Postgres (evita SQLite in produzione).
+
+1) Modifica `prisma/schema.prisma`:
+   - `provider = "sqlite"` → `provider = "postgresql"`
+2) In locale avvia un Postgres (consigliato via Docker) e imposta `DATABASE_URL` nel tuo `.env`.
+   Esempio:
+   - `postgresql://postgres:postgres@localhost:5432/trapstore?schema=public`
+3) Genera migrazioni **e committale**:
+```bash
+npx prisma migrate dev --name init
+```
+4) (Opzionale) Seed:
+```bash
+npm run prisma:seed
+```
+5) Commit + push (includendo `prisma/migrations/*`).
+
+### Step 2 — Crea il database su Render
+1) Dashboard Render → **New** → **PostgreSQL**
+2) Scegli regione (uguale a quella del web service) e piano
+3) Una volta creato, apri la pagina DB e copia:
+   - **Internal Database URL** (per usarlo dal web service su Render)
+   - **External Database URL** (solo se ti serve collegarti da fuori per debug/seed)
+
+### Step 3 — Crea il Web Service su Render
+1) Dashboard Render → **New** → **Web Service**
+2) Collega GitHub e seleziona la repo
+3) Imposta:
+   - Environment: **Node**
+   - Build Command:
+     ```
+     npm ci && npx prisma generate && npm run build
+     ```
+   - Pre‑Deploy Command (consigliato):
+     ```
+     npx prisma migrate deploy
+     ```
+     (Solo al primo deploy, se vuoi popolare dati demo: aggiungi anche `&& npm run prisma:seed`, poi rimuovilo.)
+   - Start Command:
+     ```
+     npm run start -- -p $PORT
+     ```
+     (assicurati che l'app ascolti su `process.env.PORT`)
+
+### Step 4 — Imposta le Environment Variables su Render
+Nella pagina del Web Service → **Environment** aggiungi:
+- `DATABASE_URL` = **Internal Database URL** del tuo Render Postgres
+- `NEXTAUTH_URL` = URL pubblico Render del servizio (es. `https://...onrender.com` o dominio custom)
+- `NEXTAUTH_SECRET` = stringa casuale (es. `openssl rand -base64 32`)
+
+Pagamenti:
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET` (dopo che crei l’endpoint su Stripe)
+- `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENV`
+- `NEXT_PUBLIC_PAYPAL_CLIENT_ID` (attenzione: viene “inlined” al build)
+
+Email:
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
+- `EMAIL_FROM`, `EMAIL_SUPPORT`
+
+Footer legale:
+- `BUSINESS_*`
+
+### Step 5 — Deploy
+Premi **Deploy** e controlla i logs.
+
+### Step 6 — Webhook Stripe (obbligatorio per chiusura ordini/stock)
+1) Stripe Dashboard → Developers → Webhooks → Add endpoint
+2) Endpoint:
+   - `https://TUO_DOMINIO/api/webhooks/stripe`
+3) Eventi minimi:
+   - `checkout.session.completed`
+4) Copia il “Signing secret” e incollalo in `STRIPE_WEBHOOK_SECRET` su Render
+
+### Step 7 — PayPal (return/cancel)
+Il progetto imposta `return_url` e `cancel_url` usando `NEXTAUTH_URL`.
+Assicurati che `NEXTAUTH_URL` sia corretto (dominio Render o custom).
+
+### Step 8 — Seed (se non l’hai fatto in pre‑deploy)
+Opzione A (consigliata): esegui seed dal tuo PC puntando al DB esterno Render (temporaneamente).
+Opzione B: aggiungi `npm run prisma:seed` nel Pre‑Deploy Command solo per il primo deploy.
+
+
+---
+
 ## 13) Produzione: upgrade consigliati (roadmap)
 - Passaggio a PostgreSQL:
   - in `prisma/schema.prisma` cambia `provider = "sqlite"` → `postgresql`
