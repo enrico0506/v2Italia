@@ -327,13 +327,10 @@ npm run prisma:seed
    - Environment: **Node**
    - Build Command:
      ```
-     npm ci && npx prisma generate && npm run build
+     npm install --legacy-peer-deps && npx prisma generate && npx prisma migrate deploy && npm run build
      ```
-   - Pre‑Deploy Command (consigliato):
-     ```
-     npx prisma migrate deploy
-     ```
-     (Solo al primo deploy, se vuoi popolare dati demo: aggiungi anche `&& npm run prisma:seed`, poi rimuovilo.)
+     (Solo al primo deploy, se vuoi popolare dati demo **una sola volta**: aggiungi `&& npm run prisma:seed` subito dopo `npx prisma migrate deploy`, poi rimuovilo.)
+   - Pre‑Deploy Command (opzionale): lascia vuoto (già incluso nel Build Command) oppure sposta qui `npx prisma migrate deploy` e rimuovilo dal Build Command.
    - Start Command:
      ```
      npm run start -- -p $PORT
@@ -360,7 +357,8 @@ Footer legale:
 - `BUSINESS_*`
 
 ### Step 5 — Deploy
-Premi **Deploy** e controlla i logs.
+Premi **Deploy** e controlla i logs.  
+Dopo aver aggiunto `prisma/migrations/*` o modificato Build/Pre‑Deploy Command, fai un **Manual Deploy** per forzare una nuova build e applicare le migrazioni.
 
 ### Step 6 — Webhook Stripe (obbligatorio per chiusura ordini/stock)
 1) Stripe Dashboard → Developers → Webhooks → Add endpoint
@@ -376,7 +374,7 @@ Assicurati che `NEXTAUTH_URL` sia corretto (dominio Render o custom).
 
 ### Step 8 — Seed (se non l’hai fatto in pre‑deploy)
 Opzione A (consigliata): esegui seed dal tuo PC puntando al DB esterno Render (temporaneamente).
-Opzione B: aggiungi `npm run prisma:seed` nel Pre‑Deploy Command solo per il primo deploy.
+Opzione B: aggiungi `&& npm run prisma:seed` nel Build/Pre‑Deploy Command solo per il primo deploy, poi rimuovilo.
 
 
 ---
