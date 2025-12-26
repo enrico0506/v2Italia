@@ -1,19 +1,49 @@
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import ProductPurchasePanel from "@/components/ProductPurchasePanel";
 
 export const dynamic = 'force-dynamic';
 
+function slugify(input: string) {
+  return input
+    .trim()
+    .replace(/[—–]/g, "-")
+    .replace(/[^a-zA-Z0-9 -]+/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const slug = decodeURIComponent(params.slug).trim().toLowerCase();
+  const raw = decodeURIComponent(params.slug).trim();
+  const normalized = raw.toLowerCase();
 
   const product = await prisma.product.findFirst({
-    where: { slug, isActive: true },
+    where: { slug: { equals: normalized, mode: "insensitive" }, isActive: true },
     include: { variants: true },
   });
 
-  if (!product) return notFound();
+  if (product && raw !== product.slug) {
+    redirect(`/product/${encodeURIComponent(product.slug)}`);
+  }
+
+  if (!product) {
+    const slug = slugify(raw);
+    if (slug && slug !== normalized) {
+      const bySlug = await prisma.product.findFirst({
+        where: { slug: { equals: slug, mode: "insensitive" }, isActive: true },
+        include: { variants: true },
+      });
+
+      if (bySlug) {
+        redirect(`/product/${encodeURIComponent(bySlug.slug)}`);
+      }
+    }
+
+    return notFound();
+  }
 
   const images = (product.images as unknown as string[]) ?? [];
   const variants = product.variants.map((v) => ({

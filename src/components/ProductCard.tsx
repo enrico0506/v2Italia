@@ -12,7 +12,7 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
   const min = Math.min(...prices);
 
   return (
-    <Link href={`/product/${product.slug}`} className="group block">
+    <Link href={`/product/${encodeURIComponent(product.slug)}`} className="group block">
       <div className="card overflow-hidden">
         <div className="relative aspect-[4/3] w-full overflow-hidden">
           <Image
