@@ -1,0 +1,6 @@
+port: 5432
+username: v2italymerchdb_user
+password: TmQYfX89XvxLN4WSYvI6vvA25BWLHUpM
+internal database url: postgresql://v2italymerchdb_user:TmQYfX89XvxLN4WSYvI6vvA25BWLHUpM@dpg-d57eibmr433s73elqlig-a/v2italymerchdb
+external database url: postgresql://v2italymerchdb_user:TmQYfX89XvxLN4WSYvI6vvA25BWLHUpM@dpg-d57eibmr433s73elqlig-a.frankfurt-postgres.render.com/v2italymerchdb
+psql-command: PGPASSWORD=TmQYfX89XvxLN4WSYvI6vvA25BWLHUpM psql -h dpg-d57eibmr433s73elqlig-a.frankfurt-postgres.render.com -U v2italymerchdb_user v2italymerchdb
