@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import ProductCard from "@/components/ProductCard";
 
+export const dynamic = "force-dynamic";
+
 const allowed = new Set(["hoodies", "tshirts"]);
 
 export default async function CategoryPage({ params }: { params: { category: string } }) {

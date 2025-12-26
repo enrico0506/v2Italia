@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       const order = await prisma.$transaction(async (tx) => {
         const existing = await tx.order.findUnique({
           where: { id: orderId },
-          include: { items: true },
+          include: { items: { include: { variant: { include: { product: true } } } } },
         });
 
         if (!existing) return null;

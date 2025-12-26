@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import ProductPurchasePanel from "@/components/ProductPurchasePanel";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProductPage({ params }: { params: { slug: string } }) {
   const product = await prisma.product.findUnique({
     where: { slug: params.slug },

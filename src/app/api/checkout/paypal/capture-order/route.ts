@@ -33,7 +33,10 @@ export async function POST(req: Request) {
 
   // Mark paid + decrement stock
   const updated = await prisma.$transaction(async (tx) => {
-    const existing = await tx.order.findUnique({ where: { id: order.id }, include: { items: true } });
+    const existing = await tx.order.findUnique({
+      where: { id: order.id },
+      include: { items: { include: { variant: { include: { product: true } } } } },
+    });
     if (!existing) return null;
     if (existing.paymentStatus === "PAID") return existing;
 

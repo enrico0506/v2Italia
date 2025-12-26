@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Price from "@/components/Price";
 
+export const dynamic = "force-dynamic";
+
 export default async function AccountPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) redirect("/api/auth/signin");
